@@ -56,14 +56,23 @@ app.post("/api/users", async (req, res) => {
 app.post("/api/llm/responses", async (req, res) => {
   try {
     console.log(`[responses API] req is `, req.body);
-    const { id:responseId, response, request } = req.body;
+    const { id:responseId, response, request, clerkId } = req.body;
 
     if (!responseId) return res.status(400).json({ error: "responseId is required" });
+    if (!clerkId) return res.status(400).json({ error: "clerkId is required" });
+
+    // find matching user
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      return res.status(400).json({ error: "User not found in database" });
+    } 
 
     const update = {
       responseId,
       request,
-      response: JSON.stringify(response)
+      response: JSON.stringify(response),
+      // response: mongoose.Schema.Types.Mixed,
+      user: user._id
     };
 
     const dbResponse = await LLMResponse.findOneAndUpdate({ responseId }, update, {
@@ -79,7 +88,31 @@ app.post("/api/llm/responses", async (req, res) => {
 });
 
 
+// user history api for dashboard
+app.get("/api/llm/history/:clerkId", async (req, res) => {
+  try {
+    const { clerkId } = req.params;
+
+    const user = await User.findOne({ clerkId });
+    if (!user) return res.status(400).json({ error: "User not found" });
+
+    const history = await LLMResponse.find({ user: user._id })
+      .sort({ createdAt: -1 });
+
+    res.json(history);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // server
-app.listen(process.env.PORT || 4000, () =>
-  console.log(`[API] Listening on http://localhost:${process.env.PORT}`)
-);
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`[API] Listening on http://localhost:${PORT}`);
+});
+
+// app.listen(process.env.PORT || 4000, () =>
+//   console.log(`[API] Listening on http://localhost:${process.env.PORT}`)
+// );
