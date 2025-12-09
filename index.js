@@ -56,7 +56,7 @@ app.post("/api/users", async (req, res) => {
 app.post("/api/llm/responses", async (req, res) => {
   try {
     console.log(`[responses API] req is `, req.body);
-    const { id:responseId, response, request, clerkId } = req.body;
+    const { id:responseId, response, request, requestUrl, clerkId } = req.body;
 
     if (!responseId) return res.status(400).json({ error: "responseId is required" });
     if (!clerkId) return res.status(400).json({ error: "clerkId is required" });
@@ -70,8 +70,8 @@ app.post("/api/llm/responses", async (req, res) => {
     const update = {
       responseId,
       request,
+      requestUrl: requestUrl || null,
       response: JSON.stringify(response),
-      // response: mongoose.Schema.Types.Mixed,
       user: user._id
     };
 
@@ -112,7 +112,3 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`[API] Listening on http://localhost:${PORT}`);
 });
-
-// app.listen(process.env.PORT || 4000, () =>
-//   console.log(`[API] Listening on http://localhost:${process.env.PORT}`)
-// );

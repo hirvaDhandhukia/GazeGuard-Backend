@@ -11,7 +11,8 @@ const llmResponseSchema = new mongoose.Schema(
     },
 
     request: String,
-    response: String
+    response: String,
+    requestUrl: String
   },
   { timestamps: true }
 );
